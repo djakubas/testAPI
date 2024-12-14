@@ -4,12 +4,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test API</title>
-    <script src="script.js" defer></script>
 </head>
 <body>
     <h1>Azure Entra ID API Test</h1>
-    <button onclick="login()">Login</button>
-    <button onclick="callApi()">Call API</button>
+    <button id="loginButton">Login</button>
+    <button id="callApiButton">Call API</button>
     <pre id="output">API Response will appear here</pre>
+    
+    <script>
+        const config = {
+            clientId: "e8fde093-5323-4a7f-8ec3-056017f714c8",
+            tenantId: "be030616-78c0-481d-bcd0-9d07452a14c2",
+            redirectUri: "https://djakubas.github.io/testAPI/",
+            apiScope: "api://e8fde093-5323-4a7f-8ec3-056017f714c8/ForecastRead",
+            apiUrl: "https://localhost:7186/weatherforecast",
+        };
+
+        const generateCodeVerifier = () => {
+            const array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            const verifier = btoa(String.fromCharCode(...array))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+            console.log("Generated Code Verifier:", verifier);
+            return verifier;
+        };
+
+        const generateCodeChallenge = async (verifier) => {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(verifier);
+            const digest = await window.crypto.subtle.digest('SHA-256', data);
+            const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+            console.log("Generated Code Challenge:", challenge);
+            return challenge;
+        };
+
+        const login = async () => {
+            console.log("Starting login process...");
+            const codeVerifier = generateCodeVerifier();
+            sessionStorage.setItem('code_verifier', codeVerifier);
+
+            const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+            const authUrl = `https://login.microsoftonline.com/${config.tenantId}/oauth2/v2.0/authorize?` +
+                `client_id=${config.clientId}&response_type=code&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
+                `&response_mode=query&scope=${encodeURIComponent(config.apiScope)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+
+            console.log("Redirecting to:", authUrl);
+            window.location.href = authUrl;
+        };
+
+        const fetchAccessToken = async (authCode) => {
+            console.log("Fetching access token...");
+            const codeVerifier = sessionStorage.getItem('code_verifier');
+            console.log("Using Code Verifier:", codeVerifier);
+
+            const tokenUrl = `https://login.microsoftonline.com/${config.tenantId}/oauth2/v2.0/token`;
+            const body = new URLSearchParams({
+                client_id: config.clientId,
+                grant_type: 'authorization_code',
+                code: authCode,
+                redirect_uri: config.redirectUri,
+                code_verifier: codeVerifier,
+            });
+
+            console.log("Token request body:", body.toString());
+
+            const response = await fetch(tokenUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body,
+            });
+
+            const data = await response.json();
+            console.log("Token response:", data);
+
+            if (data.access_token) {
+                console.log("Access token received.");
+                sessionStorage.setItem('access_token', data.access_token);
+            } else {
+                console.error('Error fetching access token:', data);
+            }
+        };
+
+        const callApi = async () => {
+            console.log("Calling API...");
+            const token = sessionStorage.getItem('access_token');
+
+            if (!token) {
+                console.warn("No access token found. Please log in first!");
+                alert('Please log in first!');
+                return;
+            }
+
+            try {
+                console.log("Using token:", token);
+                const response = await fetch(config.apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                console.log("API response status:", response.status);
+                if (!response.ok) {
+                    const errorDetails = await response.text();
+                    throw new Error(`API responded with status ${response.status}: ${errorDetails}`);
+                }
+
+                const data = await response.json();
+                console.log("API response data:", data);
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('Error calling API:', error);
+                document.getElementById('output').textContent = `Error calling API: ${error.message}`;
+            }
+        };
+
+        const handleRedirect = async () => {
+            console.log("Handling redirect...");
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+
+            if (code) {
+                console.log("Authorization code received:", code);
+                await fetchAccessToken(code);
+                console.log("Redirecting back to clean URL...");
+                window.history.replaceState({}, document.title, config.redirectUri);
+            } else {
+                console.log("No authorization code found in redirect URL.");
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginButton').addEventListener('click', login);
+            document.getElementById('callApiButton').addEventListener('click', callApi);
+
+            handleRedirect();
+        });
+    </script>
 </body>
 </html>
