@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azure Entra API Example</title>
+	
     <script>
         const config = {
-            clientId: "YOUR_CLIENT_ID", // Replace with your Azure App's Client ID
-            tenantId: "YOUR_TENANT_ID", // Replace with your Azure Tenant ID
-            redirectUri: "file:///C:/prodzekty/MyToDoListApp/indexTest.html", // Update with your redirect URI
+            clientId: "e8fde093-5323-4a7f-8ec3-056017f714c8", // Replace with your Azure App's Client ID
+            tenantId: "be030616-78c0-481d-bcd0-9d07452a14c2", // Replace with your Azure Tenant ID
+            redirectUri: "https://djakubas.github.io/testAPI/", // Update with your redirect URI
             apiUrl: "https://localhost:7186/weatherforecast", // Replace with your API endpoint
         };
 
@@ -99,6 +100,7 @@
 </head>
 <body>
     <h1>Azure Entra API Example</h1>
+	<p1>v.0.002</p1><br><br>
     <button onclick="login()">Login</button>
     <button onclick="callApi()">Call API</button>
     <pre id="output"></pre>
