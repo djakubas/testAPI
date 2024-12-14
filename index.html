@@ -4,18 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test API</title>
-</head>
-<body>
-    <h1>Azure Entra ID API Test</h1>
-    <button id="loginButton">Login</button>
-    <button id="callApiButton">Call API</button>
-    <pre id="output">API Response will appear here</pre>
-    
     <script>
         const config = {
             clientId: "e8fde093-5323-4a7f-8ec3-056017f714c8",
             tenantId: "be030616-78c0-481d-bcd0-9d07452a14c2",
-            redirectUri: "https://djakubas.github.io/testAPI/",
+            redirectUri: "https://djakubas.github.io/testAPI",
             apiScope: "api://e8fde093-5323-4a7f-8ec3-056017f714c8/ForecastRead",
             apiUrl: "https://localhost:7186/weatherforecast",
         };
@@ -140,12 +133,13 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('loginButton').addEventListener('click', login);
-            document.getElementById('callApiButton').addEventListener('click', callApi);
-
-            handleRedirect();
-        });
+        document.addEventListener('DOMContentLoaded', handleRedirect);
     </script>
+</head>
+<body>
+    <h1>Azure Entra ID API Test</h1>
+    <button onclick="login()">Login</button>
+    <button onclick="callApi()">Call API</button>
+    <pre id="output">API Response will appear here</pre>
 </body>
 </html>
