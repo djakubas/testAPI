@@ -38,7 +38,7 @@
 
             const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-            const authUrl = `https://login.microsoftonline.com/${config.tenantId}/oauth2/v2.0/authorize?` +
+            const authUrl = `https://login.microsoftonline.com/common${config.tenantId}/oauth2/v2.0/authorize?` +
                 `client_id=${config.clientId}&response_type=code&redirect_uri=${encodeURIComponent(config.redirectUri)}` +
                 `&response_mode=query&scope=api://${config.clientId}/.default&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
@@ -48,7 +48,7 @@
         const fetchAccessToken = async (authCode) => {
             const codeVerifier = sessionStorage.getItem("code_verifier");
 
-            const tokenUrl = `https://login.microsoftonline.com/${config.tenantId}/oauth2/v2.0/token`;
+            const tokenUrl = `https://login.microsoftonline.com/common${config.tenantId}/oauth2/v2.0/token`;
             const body = new URLSearchParams({
                 client_id: config.clientId,
                 grant_type: "authorization_code",
